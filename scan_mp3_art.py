@@ -19,9 +19,17 @@ def has_valid_album_art(file_path):
         return False
 
 
+def format_duration(seconds):
+    if seconds is None:
+        return None
+    minutes = int(seconds // 60)
+    secs = int(seconds % 60)
+    return f"{minutes}:{secs:02d}"
+
+
 def get_tag_info(file_path):
     """
-    Extract artist and title safely.
+    Extract artist, title, and duration safely.
     """
     try:
         audio = MP3(file_path)
@@ -30,14 +38,18 @@ def get_tag_info(file_path):
         artist = tags.get("TPE1")
         title = tags.get("TIT2")
 
+        duration_seconds = getattr(audio.info, "length", None)
+
         return {
             "artist": artist.text[0] if artist else None,
             "title": title.text[0] if title else None,
+            "duration": format_duration(duration_seconds),
         }
     except Exception:
         return {
             "artist": None,
             "title": None,
+            "duration": None,
         }
 
 
@@ -61,6 +73,7 @@ def scan_directory(root_dir):
                     "path": full_path,
                     "artist": tag_info["artist"],
                     "title": tag_info["title"],
+                    "duration": tag_info["duration"],
                 })
 
     return results
